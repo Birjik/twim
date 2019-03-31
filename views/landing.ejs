@@ -1,0 +1,37 @@
+<% include ./partials/header %>
+    
+<div class="col-md-6 mx-auto text-center">
+ <div class="header-title">
+    <h1 class="wv-heading--title">
+       Twim
+    </h1>
+    <h2 class="wv-heading--subtitle">
+       Let your friends chat anonymously with you
+    </h2>
+ </div>
+</div>
+<div class="row">
+ <div class="col-md-4 mx-auto">
+    <div class="myform form ">
+       <form action="/register" method="POST">
+          <div class="form-group">
+             <input type="text" name="fullName"  class="form-control my-input" id="fullname" placeholder="Full name">
+          </div>
+          <div class="form-group">
+             <input type="text" name="username"  class="form-control my-input" id="username" placeholder="Username">
+          </div>
+          <div class="form-group">
+             <input type="password" name="password"  class="form-control my-input" id="password" placeholder="Password">
+          </div>
+          <div class="form-group">
+             <input type="email" name="email"  class="form-control my-input" id="email" placeholder="Email">
+          </div>
+          <div class="text-center ">
+             <button type="submit" class=" btn btn-block send-button tx-tfm">Sign Up</button>
+          </div>
+       </form>
+    </div>
+ </div>
+</div>
+  
+<% include ./partials/footer %>

@@ -1,0 +1,77 @@
+<% include ./partials/header %>
+<style>
+.choose_file{
+    position:relative;
+    display:inline-block;    
+    border-radius:8px;
+    border:#ebebeb solid 1px;
+    width:250px; 
+    padding: 4px 6px 4px 8px;
+    font: normal 14px Myriad Pro, Verdana, Geneva, sans-serif;
+    color: #7f7f7f;
+    margin-top: 2px;
+    background:white
+}
+.choose_file input[type="file"]{
+    -webkit-appearance:none; 
+    position:absolute;
+    top:0; left:0;
+    opacity:0; 
+}
+</style>
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+<div class="container">
+	<div class="row justify-content-center">
+		<div class="col-lg-6 col-sm-9">
+            <div class="card hovercard">
+                <div class="cardheader">
+
+                </div>
+                <div class="avatar">
+                    <img src="../<%= user.linkToProfilePicture %>">
+                </div>
+                <div id = "editPage">
+                    <form action = "/changeInfo" method = "POST">
+                        <input type = "hidden" name = "user[username]" value = "<%= user.username %>"> </input>
+                        <div class="row">
+                            <div class = "col-3">Full Name</div>
+                            <div class = "col-9"><input type = "text" name = "user[fullName]" value = "<%= user.fullName %>"> </input></div>
+                        </div>
+                        <div class="row">
+                            <div class = "col-3">Bio</div>
+                            <div class = "col-9"><textarea name = "user[bio]"><%= user.bio %></textarea></div>
+                        </div>
+                        <div class="row">
+                            <div class = "col-3">Email</div>
+                            <div class = "col-9"><input type = "text" name = "user[email]" value = "<%= user.email %>"> </input></div>
+                        </div>
+                        <button class = "btn btn-sm btn-success">Save</button>
+                    </form>
+                    <hr>
+                    <form action = "/changePassword" method = "POST">
+                        <input type = "hidden" name = "username" value = "<%= user.username %>"> </input>
+                        <div class="row">
+                            <div class = "col-3">Password</div>
+                            <div class = "col-9"><input type = "password" name = "password"> </input></div>
+                            <div class = "col-3">New password</div>
+                            <div class = "col-9"><input type = "password" name = "newPassword"> </input></div>
+                            <div class = "col-3">Confirm New Password</div>
+                            <div class = "col-9"><input type = "password" name = "confirmedNewPassword"> </input></div>
+                        </div>
+                        <button class = "btn btn-sm btn-success">Change</button>
+                    </form>
+                    <form action="/uploadProfilePicture" method="post" enctype="multipart/form-data">
+                      <input type = "hidden" name = "username" value = "<%= user.username %>"> </input>
+                      <input type="file" name="avatar" />
+                        <button class = "btn btn-sm btn-success">Upload</button>
+                    </form>
+                    <!--- to do : upload profile picture and cover picture --->
+               </div> 
+            </div>
+
+        </div>
+
+	</div>
+</div>
+
+<% include ./partials/footer %>

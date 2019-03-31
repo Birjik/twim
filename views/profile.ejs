@@ -1,0 +1,81 @@
+<% include ./partials/header %>
+
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+<div class="container">
+	<div class="row justify-content-center">
+		<div class="col-lg-6 col-sm-9">
+            <div class="card hovercard">
+                <div class="cardheader">
+
+                </div>
+                <div class="avatar">
+                    <img src="<%= user.linkToProfilePicture %>">
+                </div>
+                <div class="info">
+                    <div class="title">
+                        <%= user.fullName %>
+                        <% if(currentUser && currentUser.username == user.username) { %>
+                            <a href = "<%= user.username %>/edit"><i class="fas fa-pen"></i></a>
+                        <% } %>
+                    </div>
+                    <div class="desc">
+                        <% if(user.bio) { 
+                            var res = "";
+                            for(var i = 0;i < user.bio.length;i ++){
+                                if(user.bio[i] == '\n') {
+                        %>  
+                                    <%=res%>
+                                    <br>
+                        <%
+                                    res = "";
+                                } 
+                                else {
+                                    res += user.bio[i];
+                                }
+                            }
+                        %>
+                        <%= res %> <%
+                        } 
+                        %>
+                    </div>
+                </div>
+                <div class="bottom">
+                    <div class="form-group">
+                        <form action = "chat" method = "POST">
+                            <input type = "hidden" name = "to" value = "<%= user.username %>">
+                            <input type = "hidden" name = "from" id = "from" value = "<%= from %>">
+                            <input type = "hidden" id = "roomName" value = "<%= room %>">
+                            <textarea name = "message" class="form-control" id="textAreaStartConversation" rows="3" placeholder = "Start conversation"></textarea>
+                            <button onclick="sentMessage()" id = "startConversation" type="submit" class="float-right btn-sm btn-dark"><i class="fa fa-paper-plane fa-2x" aria-hidden="true"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</div>
+</div>
+
+<script>
+    var socket = io.connect('https://webdevbootcamp-birjik.c9users.io:8080');
+    if(socket !== undefined){
+        console.log('Connected to socket...');
+    }
+    var element = function(id){
+        return document.getElementById(id);
+    }
+    function sentMessage(){
+        var from = element("from").value;
+        var room = element("roomName").value;
+        var message = element("textAreaStartConversation").value;
+        socket.emit('input', {
+            username: from,
+            message: message,
+            room: room,
+            fromProfile : 1
+        });
+        socket.emit('hasDialog', room);
+        
+    };
+</script>
+
+<% include ./partials/footer %>

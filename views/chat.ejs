@@ -1,0 +1,252 @@
+<% include ./partials/header %>
+    <input type = "hidden" id = "myUsername" value = "<%= personsUsername %>">
+    <input type = "hidden" id = "lastRoom" value = "<%= lastRoom %>">
+    
+<script>
+    function getMinOrMaxString(string1, string2, if_max){
+        if(string1.length < string2.length){
+            if(if_max == 1)
+                return string2;
+            return string1;
+        }
+        else if(string1.length > string2.length){
+            if(if_max == 1)
+                return string1;
+            return string2;
+        }
+        for(var i = 0;i < string1.length;i ++){
+            if(string1[i] < string2[i]){
+                if(if_max == 1)
+                    return string2;
+                return string1;            
+            }
+            else if(string1[i] > string2[i]){
+                if(if_max == 1)
+                    return string1;
+                return string2;
+            }   
+        }
+        return string1;
+    }
+    var element = function(id){
+        return document.getElementById(id);
+    }
+    var offset = new Date().getTimezoneOffset();
+    function changeRoom(x){
+        if(currentRoom != ''){
+            socket.emit("unsubscribe", currentRoom);
+            element(currentRoom).style.background = "#fff";
+        }
+        currentRoom = x;
+        socket.emit("subscribe", currentRoom);
+        element(currentRoom).style.background = "#f2f2f2";
+    }
+    var myUsername = element('myUsername').value;
+    var currentRoom = element('lastRoom').value;
+    var socket = io.connect('https://webdevbootcamp-birjik.c9users.io:8080');
+    if(socket !== undefined){
+        console.log('Connected to socket...');
+    }
+</script>
+
+<div class="container app">
+    <div class="row app-one">
+        <div class="col-md-4 side">
+            <div class="side-one">
+                <div class="row sideBar flex-column justify-content-start" id = "people">
+                    <input type = "hidden" id = "peopleCnt" value = "<%= people.length %>">
+                    <%
+                        for(var i = 0;i < people.length;++ i){
+                            if(!people[i].linkToProfilePicture){
+                                people[i].linkToProfilePicture = "https://bootdey.com/img/Content/avatar/avatar4.png";
+                            }
+                            if(!people[i].fullName || people[i].fullName == ''){
+                                people[i].fullName = '?';
+                            }
+                    %>
+                    <div id = "<%= people[i].room %>" class="row sideBar-body" onclick = "DialogClicked('<%= people[i].username %>')">
+                        <div class="col-md-3 col-3 sideBar-avatar">
+                            <div class="avatar-icon">
+                                <img src="<%= people[i].linkToProfilePicture %>">
+                            </div>
+                        </div>
+                        <div class="col-md-9 col-9 sideBar-main">
+                            <div class="row">
+                                <%
+                                    var read = 1;
+                                    if(people[i].lastClick < people[i].lastTime && people[i].username != personsUsername){
+                                        read = 0;
+                                    }
+                                %>
+                                <input type = "hidden" id = "<%=people[i].room%>read" value = "<%= read %>">
+                                <div class="col-md-8 col-8 sideBar-name"> 
+                                    <div class = "row"><span class="name-meta" id = "<%= people[i].room %>lastPerson"><%= people[i].fullName %></span></div>
+                                    <div class = "row"><span class="lastMessage-meta" id = "<%= people[i].room %>lastMessage">
+                                        <% 
+                                            if(people[i].lastMessage && people[i].lastMessage.length > 30)
+                                                people[i].lastMessage = people[i].lastMessage.substr(0, 27) + "...";
+                                            if(people[i].lastSent == personsUsername){
+                                                people[i].lastMessage = "you : " + people[i].lastMessage;
+                                            }
+                                        %>
+                                        <%= people[i].lastMessage %></span></div>
+                                    <input type = "hidden" id = "username[<%= i %>]" value = "<%= people[i].username %>">
+                                </div>
+                                <div class="col-md-4 col-4 float-right sideBar-time"> 
+                                    <span class="time-meta float-right"><%= people[i].lastTime %></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <%
+                        };
+                    %>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 conversation">
+            <div class="message" id="conversation">
+                
+            </div>
+            <div class="row reply">
+                <div class="col-md-11 col-11 reply-main">
+                    <input class="form-control" rows="2" id="comment"></input>
+                </div>
+                <!---
+                <div class="col-md-1 col-1 reply-recording"> <i class="fa fa-image fa-2x" aria-hidden="true"></i>
+                </div>
+                -->
+                <div class="col-md-1 col-1 reply-send"> <i class="fa fa-paper-plane fa-2x" aria-hidden="true" onclick = "sendMessage()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function DialogClicked(username){
+        var room = getMinOrMaxString(username, myUsername, 0) + '@' + getMinOrMaxString(username, myUsername, 1);
+        changeRoom(room);
+        console.log("clicked" + username);
+        socket.emit('lastClick', {clicked : myUsername, room: room});
+        element(room + "lastMessage").style.fontWeight = "400";
+        element(room + "lastMessage").style.color = "#999999";
+        element(room + "lastPerson").style.fontWeight = "400";
+        $("#comment").focus();
+    }
+    function pad(num) { 
+      return ("0" + num).slice(-2);
+    }
+    function convertDate(timestamp) {
+      var differenceInHours = Math.round((Date.now() - timestamp) / 1000 / 60 / 60);
+      var differenceInDays = Math.round(differenceInHours / 24);
+      var date = new Date(timestamp);
+      if(new Date().getFullYear() - date.getFullYear() > 1){
+        return date.getFullYear();
+      }
+      if(differenceInHours > 23){
+        return pad(date.getMonth() + 1) + "." + pad(date.getDate());    
+      }
+      var hours = date.getHours();
+      var minutes = date.getMinutes();
+      return pad(hours) + ":" + pad(minutes);
+    }
+    function convertMessage(message){
+        var result = "";
+        for(var i = 0;i < message.length;i += 50){
+            var left = Math.min(50, message.length - i);
+            result += message.substr(i, left) + "<br>";
+        }
+        return result;
+    }
+    function sendMessage(){
+        element(currentRoom + "lastMessage").style.fontWeight = "400";
+        element(currentRoom + "lastMessage").style.color = "#999999";
+        element(currentRoom + "lastPerson").style.fontWeight = "400";
+        socket.emit('input', {
+            username: myUsername,
+            message: comment.value,
+            room: currentRoom,
+        });
+        comment.value = '';
+    }
+    var peopleCnt = element("peopleCnt").value;
+    var comment = element("comment");
+    var messages = element("conversation");
+    var people = element("people");
+    $("#comment").focus();
+    var lastSentTimes = document.getElementsByClassName("time-meta");
+    for(var i = 0;i < peopleCnt;++ i){
+        var username = element("username[" + i.toString() + "]").value;
+        var room = getMinOrMaxString(username, myUsername, 0) + '@' + getMinOrMaxString(username, myUsername, 1);
+        lastSentTimes[i].textContent = convertDate(parseInt(lastSentTimes[i].textContent, 10));
+        socket.emit("hasDialog", room);
+        if(element(room + "read").value == "0" && currentRoom != room){
+            element(room + "lastMessage").style.fontWeight = "700";
+            element(room + "lastMessage").style.color = "#000";
+            element(room + "lastPerson").style.fontWeight = "700";
+        }
+        else if(currentRoom == ''){
+            currentRoom = room;
+        }
+    }
+    element(currentRoom).style.background = "#f2f2f2";
+    socket.emit("subscribe", currentRoom);
+    console.log(currentRoom);
+    comment.addEventListener('keydown', function(event){
+        if(event.which === 13){
+            element(currentRoom + "lastMessage").style.fontWeight = "400";
+            element(currentRoom + "lastMessage").style.color = "#999999";
+            element(currentRoom + "lastPerson").style.fontWeight = "400";
+            socket.emit('input', {
+                username: myUsername,
+                message: comment.value,
+                room: currentRoom,
+            });
+            event.preventDefault();
+            comment.value = '';
+        }
+    });
+    socket.on('lastMessage', function(data){
+        console.log("got lastMessage");
+        var lastSent = element(data.room);
+        people.insertBefore(lastSent, people.firstChild);   
+        if(data.message.length > 30)
+            data.message = data.message.substr(0, 27) + "...";
+        if(data.user == myUsername)
+            data.message = "you : " + data.message;
+        element(data.room + "lastMessage").textContent = data.message;
+        if(data.room != currentRoom){
+            element(data.room + "lastMessage").style.fontWeight = "700";
+            element(data.room + "lastMessage").style.color = "#000";
+            element(data.room + "lastPerson").style.fontWeight = "700";
+        }
+    });
+    socket.on('output', function(data){
+        var room = data.room;
+        socket.emit('lastClick', {clicked : myUsername, room: room});
+        console.log("got output");
+        if(data.messages.length && room == currentRoom){
+            while (messages.firstChild){
+                messages.removeChild(messages.firstChild);
+            }
+            var all = Array();
+            var allHTML = '';
+            for(var i = 0;i < data.messages.length;++ i){
+                var receiverOrSender = "receiver";
+                if(data.messages[i].user == myUsername)
+                    receiverOrSender = "sender";
+                var htmlForMessage = 
+                '<div class="row message-body">\n' + 
+                '<div class="col-sm-12 message-main-' + receiverOrSender +'">\n' + 
+                '<div class="' + receiverOrSender + '">\n' + 
+                '<div class="message-text">' + convertMessage(data.messages[i].message) + '</div>\n' + 
+                '<span class="message-time float-right">' + convertDate(data.messages[i].date) + '</span>\n' + 
+                '</div></div></div>';
+                $('#conversation').append(htmlForMessage);
+            }
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+    });
+    
+</script>
+<% include ./partials/footer %>
